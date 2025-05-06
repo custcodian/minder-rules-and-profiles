@@ -1,0 +1,7 @@
+# Adapted from https://semgrep.dev/docs/semgrep-ci/sample-ci-configs
+# Name of this GitHub Actions workflow.
+name: Semgrep CE scan
+
+on:
+  # Scan changed files in PRs (diff-aware scanning):
+  - pull_request
