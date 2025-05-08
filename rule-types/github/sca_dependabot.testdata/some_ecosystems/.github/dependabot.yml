@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # Deliberately missing 'npm' ecosystem in /frontend directory
+  - package-ecosystem: "maven"
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+  # Not needed, but should not hurt
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/.github/workflows/"
+    schedule:
+      interval: "weekly"

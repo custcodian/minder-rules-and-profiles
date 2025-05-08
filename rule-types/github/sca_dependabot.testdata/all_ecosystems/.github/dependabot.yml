@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gomod"
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+  # Not needed, but should not hurt
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/.github/workflows/"
+    schedule:
+      interval: "weekly"

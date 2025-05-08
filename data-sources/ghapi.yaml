@@ -24,3 +24,13 @@ rest:
             type: string
           repo:
             type: string
+    private_vuln_reporting:
+      endpoint: https://api.github.com/repos/{owner}/{repo}/private-vulnerability-reporting
+      parse: json
+      input_schema:
+        type: object
+        properties:
+          owner:
+            type: string
+          repo:
+            type: string
