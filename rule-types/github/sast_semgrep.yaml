@@ -72,7 +72,7 @@ def:
       body: |
         This is a Minder automated pull request.
         
-        This pull request enables Semgrep for the repository.  Semgrep is a
+        This pull request enables Semgrep for the repository. Semgrep is a
         static analysis tool that can be used to find security vulnerabilities
         in code. It is a fast and lightweight open-source tool that can be
         integrated into the pull request workflow to highlight dangerous code

@@ -16,7 +16,7 @@ guidance: |
   Ensure that Dependabot is configured and enabled for all language
   ecosystems used in the repository.
 
-  Dependabot enables Automated dependency updates for repositories.
+  Dependabot enables automated dependency updates for repositories.
   It is recommended that repositories have some form of automated
   dependency updates enabled to ensure that vulnerabilities are not
   introduced into the codebase.
