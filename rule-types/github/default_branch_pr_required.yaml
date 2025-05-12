@@ -3,15 +3,15 @@ release_phase: beta
 type: rule-type
 name: default_branch_pr_required
 display_name: Require pull requests for default branch changes
-short_failure_message: Branch changes can be made without a pull request
+short_failure_message: Changes can be made to the default branch without a pull request
 severity:
   value: high
 context:
   provider: github
 description: |
-  Require that software changes are made through pull requests.  This ensures
-  that CI process can be run and that changes can be reviewed before being
-  merged.
+  Require that software changes are made through pull requests.  The pull request process
+  provides hooks for human verification through code review and automated verification
+  using CI processes.
 guidance: |
   Enable a repository ruleset which requires that all changes to the
   specified branches (which includes at least the default branch) are made
