@@ -22,8 +22,8 @@ description: |
   [semgrep.dev](https://semgrep.dev/).
 guidance: |
   Ensure that Static Application Security Testing is configured and enabled for
-  the repository.  This rule checks for Semgrep or CodeQL actions with a
-  pull_request trigger.
+  the repository.  This rule checks for Semgrep actions with a pull_request
+  trigger.
 def:
   in_entity: repository
   rule_schema:
@@ -51,6 +51,10 @@ def:
 
           semgrep_job(contents.jobs[_])
         }
+        # TODO: check /repos/${owner}/${repo}/code-scanning/default-setup for
+        # {"state": "enabled"} and skip if true
+        # This depends on the data source API being able to make _authenticated_
+        # requests to the GitHub API.
 
         run_on_pr(on) if on.pull_request
         run_on_pr(on) if "pull_request" in on
