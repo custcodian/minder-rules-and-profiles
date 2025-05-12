@@ -9,7 +9,7 @@ This directory provides rules verifying one implementation of the top 5 items to
   * Prevent updates to release tags
   * Require PRs for updates
 
-  This requires that the repo is either `public` or that a GitHub Team or that the organization is on a [Team](https://docs.github.com/en/get-started/learning-about-github/githubs-plans) or higher plan.
+  Repository rulesets are available for public repos and for organizations on a [Team](https://docs.github.com/en/get-started/learning-about-github/githubs-plans) or higher plan.
 
   <!-- TODO: Add the ability to enforce certain checks passing, based on past history -->
 
