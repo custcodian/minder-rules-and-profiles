@@ -3,7 +3,7 @@ release_phase: beta
 type: rule-type
 name: default_branch_pr_required
 display_name: Require pull requests for default branch changes
-short_failure_message: Branch changes can be made without a pull request
+short_failure_message: Changes can be made to the default branch without a pull request
 severity:
   value: high
 context:
