@@ -1,0 +1,115 @@
+version: v1
+release_phase: beta
+type: rule-type
+name: sast_semgrep
+display_name: Enable Semgrep SAST
+short_failure_message: "SAST: Semgrep is not configured"
+severity:
+  value: medium
+context:
+  provider: github
+description: |
+  Verifies that static application security testing (SAST) is configured for
+  the repository using Semgrep.
+
+  Semgrep is a static analysis tool that can be used to find security
+  vulnerabilities in code. It is a fast and lightweight open-source tool that
+  can be integrated into the pull request workflow to highlight dangerous code
+  patterns which might introduce a vulnerability.
+
+  This rule configures Semgrep in the open-source "community edition" mode. For
+  more information, including commercial integrations, see
+  [semgrep.dev](https://semgrep.dev/).
+guidance: |
+  Ensure that Static Application Security Testing is configured and enabled for
+  the repository.  This rule checks for Semgrep actions with a pull_request
+  trigger.
+def:
+  in_entity: repository
+  rule_schema:
+    type: object
+    properties: {}
+  ingest:
+    type: git
+  eval:
+    type: rego
+    rego:
+      type: deny-by-default
+      def: |
+        package minder
+
+        import rego.v1
+
+        default allow := false
+
+        workflows := file.ls("./.github/workflows")
+        allow if {
+          some w
+          contents := parse_yaml(file.read(workflows[w]))
+
+          run_on_pr(contents.on)
+
+          semgrep_job(contents.jobs[_])
+        }
+        # TODO: check /repos/${owner}/${repo}/code-scanning/default-setup for
+        # {"state": "enabled"} and skip if true
+        # This depends on the data source API being able to make _authenticated_
+        # requests to the GitHub API.
+
+        run_on_pr(on) if on.pull_request
+        run_on_pr(on) if "pull_request" in on
+
+        semgrep_job(job) if {
+          job.container.image == "semgrep/semgrep"
+        }
+        semgrep_job(job) if {
+          contains(job.steps[_].run, "semgrep ")
+        }
+  remediate:
+    type: pull_request
+    pull_request:
+      title: Enable Semgrep SAST for {{ .Entity.Name }}
+      body: |
+        This is a Minder automated pull request.
+        
+        This pull request enables Semgrep for the repository. Semgrep is a
+        static analysis tool that can be used to find security vulnerabilities
+        in code. It is a fast and lightweight open-source tool that can be
+        integrated into the pull request workflow to highlight dangerous code
+        patterns which might introduce a vulnerability.
+      contents:
+      - path: .github/workflows/semgrep.yaml
+        action: replace
+        content: |
+          # Adapted from https://semgrep.dev/docs/semgrep-ci/sample-ci-configs
+          # Name of this GitHub Actions workflow.
+          name: Semgrep CE scan
+
+          on:
+            # Scan changed files in PRs (diff-aware scanning):
+            - pull_request
+
+          permissions:
+            contents: read
+
+          jobs:
+            semgrep:
+              name: semgrep/scan
+
+              container:
+                # A Docker image with Semgrep installed. Do not change this.
+                image: semgrep/semgrep
+
+              # Skip any PR created by dependabot to avoid permission issues:
+              if: (github.actor != 'dependabot[bot]')
+
+              steps:
+                - name: Checkout code
+                  uses: actions/checkout@v4
+                - name: Run Semgrep
+                  run: semgrep ci --config auto --sarif-output=semgrep.sarif
+                - name: Upload SARIF results
+                  if: failure()
+                  uses: github/codeql-action/upload-sarif@v3
+                  with:
+                    sarif_file: semgrep.sarif

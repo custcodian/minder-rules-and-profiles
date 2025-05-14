@@ -1,6 +1,9 @@
 module github.com/mindersec/minder-rules-and-profiles
 
-go 1.23.4
+go 1.24.1
+
+toolchain go1.24.3
+
 require (
 	github.com/mindersec/minder v0.0.88
 	github.com/rs/zerolog v1.34.0

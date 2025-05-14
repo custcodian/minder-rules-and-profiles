@@ -33,4 +33,4 @@ rest:
           owner:
             type: string
           repo:
-            type: string            
+            type: string

@@ -1,0 +1,41 @@
+tests:
+- name: "Dependencies, no dependabot.yml"
+  def: {}
+  params: {}
+  expect: fail
+  # GitHub Actions is a special case where the directory is always "/"
+  error_text: |
+    evaluation failure: [{"dirs":["/"],"ecosystem":"github-actions"},{"dirs":["/"],"ecosystem":"npm"}]
+  entity:
+    type: repository
+    entity:
+      owner: "coolhead"
+      name: "haze-wave"
+  git:
+    repo_base: no_dependabot_yml
+
+- name: "Dependencies, dependabot.yml covers some ecosystems"
+  def: {}
+  params: {}
+  expect: "fail"
+  error_text: |
+    evaluation failure: [{"dirs":["/frontend/"],"ecosystem":"npm"}]
+  entity:
+    type: repository
+    entity:
+      owner: "coolhead"
+      name: "haze-wave"
+  git:
+    repo_base: some_ecosystems
+
+- name: "Dependencies, dependabot.yml covers all ecosystems"
+  def: {}
+  params: {}
+  expect: "pass"
+  entity:
+    type: repository
+    entity:
+      owner: "coolhead"
+      name: "haze-wave"
+  git:
+    repo_base: all_ecosystems

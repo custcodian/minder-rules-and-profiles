@@ -1,0 +1,26 @@
+version: v1
+type: profile
+name: custcodian-top-5
+display_name: Custcodian Top 5 Security Recommendations
+context:
+  provider: github
+alert: "off"
+remediate: "off"
+repository:
+  - type: default_branch_pr_required
+    def: {}
+  # Given the shape of the GitHub API, we can't yet orchestrate the calls for checking this pattern.
+  # - type: block_tag_updates
+  #   def:
+  #     version_pattern: v[0-9].[0-9]*.[0-9]*
+  - type: actions_check_pinned_tags
+    def: {}
+  - type: sast_semgrep
+    def: {}
+  - type: sca_dependabot
+    def:
+      schedule_interval: weekly
+  - type: actions_check_default_permissions
+    def:
+      contents: read
+      id_token: write

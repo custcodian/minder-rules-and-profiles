@@ -1,0 +1,100 @@
+version: v1
+release_phase: beta
+type: rule-type
+name: default_branch_pr_required
+display_name: Require pull requests for default branch changes
+short_failure_message: Changes can be made to the default branch without a pull request
+severity:
+  value: high
+context:
+  provider: github
+description: |
+  Require that software changes are made through pull requests.  The pull request process
+  provides hooks for human verification through code review and automated verification
+  using CI processes.
+guidance: |
+  Enable a repository ruleset which requires that all changes to the
+  specified branches (which includes at least the default branch) are made
+  through pull requests.  Additionally, a ruleset should restrict force pushes
+  and deletions of the specified branches, to prevent users rewriting the
+  branch history.
+
+  For more details on repository rulesets, see [GitHub's
+  documentation](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets).
+def:
+  in_entity: repository
+  rule_schema:
+    properties:
+      required_approvals:
+        type: integer
+        description: "The number of required approvals for pull requests."
+        default: 0
+  ingest:
+    type: rest
+    rest:
+      endpoint: '/repos/{{.Entity.Owner}}/{{.Entity.Name}}/rules/branch/{{.Entity.DefaultBranch}}'
+      parse: json
+      fallback:
+        - http_code: 404
+          body: "[]"
+  eval:
+    type: rego
+    rego:
+      type: deny-by-default
+      def: |
+        package minder
+
+        import rego.v1
+
+        default allow := false
+
+        allow if {
+          prs_required
+          force_push_blocked
+          delete_protected
+        }
+
+        rules := input.ingested
+
+        prs_required if {
+          rules[i].type == "pull_request"
+          params := object.get(rules[i], "parameters", {})
+          required_reviews := object.get(params, "required_approving_review_count", 0)
+          required_reviews >= input.profile.required_approvals
+        }
+        force_push_blocked if {
+          rules[_].type == "non_fast_forward"
+        }
+
+        delete_protected if {
+          rules[_].type == "deletion"
+        }
+  remediate:
+    type: rest
+    rest:
+      method: POST
+      endpoint: '/repos/{{.Entity.Owner}}/{{.Entity.Name}}/rulesets'
+      body: |
+        {
+          "name": "Enforce Pull Requests",
+          "target": "branch",
+          "enforcement": "active",
+          "conditions": {
+            "ref_name": {
+              "include": ["~DEFAULT_BRANCH"],
+              "exclude": []
+            }
+          },
+          "rules": [
+            {"type": "deletion"},
+            {"type": "non_fast_forward"},
+            {
+              {{if .Profile.required_approvals}}
+              "parameters": {
+                "required_approving_review_count": {{ .Profile.required_approvals }}
+              },
+              {{end}}
+              "type": "pull_request"
+            }
+          ]
+        }
