@@ -3,7 +3,7 @@ release_phase: beta
 type: rule-type
 name: sast_semgrep
 display_name: Enable Semgrep SAST
-short_failure_message: SAST is not configured
+short_failure_message: "SAST: Semgrep is not configured"
 severity:
   value: medium
 context:

@@ -3,7 +3,7 @@ version: v1
 release_phase: beta
 type: rule-type
 name: sca_dependabot
-display_name: "SCA automation: Dependabot"
+display_name: Enable Dependabot SCA
 short_failure_message: "SCA: Dependabot is not configured"
 severity:
   value: medium
