@@ -1,0 +1,94 @@
+version: v1
+release_phase: beta
+type: rule-type
+name: release_tags_immutable
+display_name: Release tags should not be updated after creation
+short_failure_message: Unprotected release tag in repository
+severity:
+  value: medium
+context:
+  provider: github
+description: |
+  Tags are used to record the specific git commit which was used to
+  produce a release.  Repository rulesets can be used to ensure that
+  the mapping from a named tag to a git commit is immutable.
+guidance: |
+  Release tags should be immutable to maintain a reliable history of
+  your software releases. When tags can be moved, it becomes difficult
+  to trace which exact commit was used for a specific release,
+  potentially causing confusion in dependency management and security
+  auditing.
+
+  To protect release tags, configure a repository ruleset that prevents
+  tags from being modified or deleted after creation. See GitHub's
+  documentation on repository rulesets at
+  https://docs.github.com/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets#tag-protection-rules.
+def:
+  in_entity: repository
+  rule_schema:
+    properties: {}
+  ingest:
+    type: rest
+    rest:
+      endpoint: /graphql
+      method: 
+      body: |
+        { "query": { "query
+          { organization(login:\"{{.Entity.Owner}}\") {
+            repository(name:\"{{.Entity.Name}}\") {
+              branchProtectionRules(first: 100) {
+                nodes { pattern }
+              },
+              rulesets(first: 100) {
+                nodes {
+                  id
+                  name
+                  databaseId
+                  target
+                  conditions {
+                    refName {exclude, include}
+                  }
+                  rules(first:100) {
+                    nodes {type}
+                  }
+                }
+              }
+            }
+          }}
+        "}}
+  eval:
+    type: rego
+    rego:
+      type: deny-by-default
+      def: |
+        package minder
+        import rego.v1
+
+        default allow := false
+
+        // TODO: allow if the following are enforced, otherwise provide output including the databaseId of any rule that should be updated with enforcement rules
+        rulesets := input.ingested
+
+  remediate:
+    type: rest
+    rest:
+      method: POST  # TODO: or PUT, with .databaseId in the endpoint URL
+      endpoint: '/repos/{{.Entity.Owner}}/{{.Entity.Name}}/rulesets'
+      # TODO: include .bypass_actors from a param?
+      body: |
+        {
+          "name": "Immutable Release Tags",
+          "target": "tag",
+          "enforcement": "active",
+          "conditions": {
+            "ref_name": {
+              "include": ["v*.*.*"],
+              "exclude": []
+            }
+          },
+          "rules": [
+            {"type": "update"},
+            {"type": "deletion"},
+            {"type": "non_fast_forward"}
+          ]
+        }
