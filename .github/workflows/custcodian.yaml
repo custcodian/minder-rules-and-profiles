@@ -20,11 +20,11 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
     - name: Apply Minder Config
-      uses: custcodian/minder-action@v1
+      uses: custcodian/minder-action@3a0298592619a0feb118d134f9443c9aea60eead  # Will be v1.1
       with:
         server: api.custcodian.dev
-        # This is the `minder-custcodian` project.
+        # This is the `github-custcodian` project.
         project: e6d46fac-6122-4949-a161-469f001aabb0
         # Load the OSPS security baseline for the moment, will customize
         # to other recommendations (and a directory list?) later.
-        directory: ./security-baseline
+        directory: ./top-5
