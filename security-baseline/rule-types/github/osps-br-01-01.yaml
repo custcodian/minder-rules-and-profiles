@@ -1,7 +1,7 @@
 version: v1
 release_phase: alpha
 type: rule-type
-name: osps-br-01
+name: osps-br-01-01
 display_name: Prevent untrusted input in continuous integration
 short_failure_message: Untrusted input can subvert workflows
 severity:
@@ -53,7 +53,7 @@ def:
         dangerous_triggers = ["pull_request_target", "workflow_run"]
 
         # Look for dangerous triggers combined with checkout of user-controlled code.
-        violations[{"msg": msg}] if {
+        violations contains {"msg": msg} if {
           some w
           contents := file.read(workflows[w])
           workflow := parse_yaml(contents)
@@ -90,7 +90,7 @@ def:
         }
 
         # Look for possible script injections
-        violations[{"msg": msg}] if {
+        violations contains {"msg": msg} if {
           some w
           contents := file.read(workflows[w])
           workflow := parse_yaml(contents)
