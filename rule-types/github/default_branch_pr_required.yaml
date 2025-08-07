@@ -32,21 +32,39 @@ def:
   ingest:
     type: rest
     rest:
-      endpoint: '/repos/{{.Entity.Owner}}/{{.Entity.Name}}/rules/branch/{{.Entity.DefaultBranch}}'
+      endpoint: /graphql
       parse: json
-      fallback:
-        - http_code: 404
-          body: "[]"
+      method: POST
+      body: |
+        { "query": "query {
+          repository(name:\"{{.Entity.Name}}\", owner:\"{{.Entity.Owner}}\") {
+            rulesets(first: 100) {
+              nodes {
+                id,
+                name,
+                databaseId,
+                target,
+                enforcement,
+                conditions {
+                  refName {exclude, include}
+                },
+                rules(first:100) {
+                  nodes {type, parameters}
+                }
+              }
+            }
+          }
+        }"}
   eval:
     type: rego
     rego:
       type: deny-by-default
       def: |
         package minder
-
         import rego.v1
 
         default allow := false
+        rulesets := input.ingested.data.repository.rulesets.nodes
 
         allow if {
           prs_required
@@ -54,26 +72,65 @@ def:
           delete_protected
         }
 
+        message := sprintf(
+          "Default branch protections missing:\n- Delete protected: %t\n- Force push protected: %t\n- PR required: %t",
+          [delete_protected, force_push_blocked, prs_required])
+
         rules := input.ingested
 
         prs_required if {
-          rules[i].type == "pull_request"
-          params := object.get(rules[i], "parameters", {})
+          some rule
+          rulesets[rule].target == "BRANCH"
+          rulesets[rule].enforcement == "ACTIVE"
+          matches_default_branch(rulesets[rule].conditions.refName.include)
+
+          rulesets[rule].type == "pull_request"
+          params := object.get(rulesets[rule], "parameters", {})
           required_reviews := object.get(params, "required_approving_review_count", 0)
           required_reviews >= input.profile.required_approvals
         }
         force_push_blocked if {
-          rules[_].type == "non_fast_forward"
+          some rule
+          rulesets[rule].target == "BRANCH"
+          rulesets[rule].enforcement == "ACTIVE"
+          matches_default_branch(rulesets[rule].conditions.refName.include)
+          rulesets[rule].type == "non_fast_forward"
         }
 
         delete_protected if {
-          rules[_].type == "deletion"
+          some rule
+          rulesets[rule].target == "BRANCH"
+          rulesets[rule].enforcement == "ACTIVE"
+          matches_default_branch(rulesets[rule].conditions.refName.include)
+
+          rulesets[rule].type == "deletion"
         }
+
+        default output := {"id": ""}
+        # Two rules cannot share the same name; if we find a rule with
+        # the target name, we should do an update rather than create
+        output := {"id": ruleId} if {
+          some rule
+          rulesets[rule].name == "Enforce Pull Requests"
+          ruleId := rulesets[rule].databaseId
+        }
+
+        # We can match the default branch three ways:
+        matches_default_branch(refs) if {
+          refs[_] == "~DEFAULT_BRANCH"
+        }
+        matches_default_branch(refs) if {
+          refs[_] == concat("refs/heads/", input.properties["github/default_branch"])
+        }
+        matches_default_branch(refs) if {
+          refs[_] == "~ALL"
+        }
+ 
   remediate:
     type: rest
     rest:
-      method: POST
-      endpoint: '/repos/{{.Entity.Owner}}/{{.Entity.Name}}/rulesets'
+      method: '{{if .EvalResultOutput.id}}PUT{{else}}POST{{end}}'
+      endpoint: '/repos/{{.Entity.Owner}}/{{.Entity.Name}}/rulesets{{if .EvalResultOutput.id}}/{{.EvalResultOutput.id}}{{end}}'
       body: |
         {
           "name": "Enforce Pull Requests",
@@ -89,12 +146,12 @@ def:
             {"type": "deletion"},
             {"type": "non_fast_forward"},
             {
+              "type": "pull_request"
               {{if .Profile.required_approvals}}
               "parameters": {
                 "required_approving_review_count": {{ .Profile.required_approvals }}
               },
               {{end}}
-              "type": "pull_request"
             }
           ]
         }
