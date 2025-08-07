@@ -9,10 +9,8 @@ remediate: "off"
 repository:
   - type: default_branch_pr_required
     def: {}
-  # Given the shape of the GitHub API, we can't yet orchestrate the calls for checking this pattern.
-  # - type: block_tag_updates
-  #   def:
-  #     version_pattern: v[0-9].[0-9]*.[0-9]*
+  - type: release_tags_immutable
+    def: {}
   - type: actions_check_pinned_tags
     def: {}
   - type: sast_semgrep
