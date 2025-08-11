@@ -95,6 +95,7 @@ def:
           jobs:
             semgrep:
               name: semgrep/scan
+              runs-on: ubuntu-latest
 
               container:
                 # A Docker image with Semgrep installed. Do not change this.
