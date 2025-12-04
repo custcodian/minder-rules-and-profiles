@@ -1,0 +1,41 @@
+version: v1
+release_phase: alpha
+type: rule-type
+name: osps-br-07-01
+display_name: Prevent unintentional storage of sensitive data
+short_failure_message: Sensitive data not protected
+severity:
+  value: high
+context:
+  provider: github
+description: |
+  This check determines whether the project prevents the unintentional
+  inclusion of sensitive data such as secrets or credentials in the
+  version control system.
+
+  Repositories should configure .gitignore or forge-specific secret
+  detection APIs to prevent the accidental inclusion of files which
+  contain secrets.
+
+guidance: |
+  Configure [.gitignore](https://git-scm.com/docs/gitignore) or
+  [secret push protection](https://docs.github.com/en/code-security/secret-scanning/introduction/about-push-protection) on the repository.
+def:
+  in_entity: repository
+  rule_schema: {}
+  ingest:
+    type: git
+  eval:
+    # We only need to worry about links in e.g. the README, as artifacts
+    # distributed via GitHub releases or package repositories will already
+    # be encrypted.
+    type: rego
+    rego:
+      type: constraints
+      def: |
+        package minder
+        import rego.v1
+
+        # TODO -- check both .gitignore presence and secret push protection
+        # if either is in place, then pass.  Remediate by creating a .gitignore
+        # file.
