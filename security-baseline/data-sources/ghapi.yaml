@@ -3,6 +3,7 @@ type: data-source
 name: ghapi
 context: {}
 rest:
+  providerAuth: true
   def:
     license:
       endpoint: https://api.github.com/repos/{owner}/{repo}/license
