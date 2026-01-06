@@ -64,6 +64,9 @@ def:
         import rego.v1
 
         default allow := false
+        default prs_required := false
+        default force_push_blocked := false
+        default delete_protected := false
         rulesets := input.ingested.data.repository.rulesets.nodes
 
         allow if {
@@ -76,43 +79,44 @@ def:
           "Default branch protections missing:\n- Delete protected: %t\n- Force push protected: %t\n- PR required: %t",
           [delete_protected, force_push_blocked, prs_required])
 
-        rules := input.ingested
-
         prs_required if {
-          some rule
-          rulesets[rule].target == "BRANCH"
-          rulesets[rule].enforcement == "ACTIVE"
-          matches_default_branch(rulesets[rule].conditions.refName.include)
+          some ruleset
+          rulesets[ruleset].target == "BRANCH"
+          rulesets[ruleset].enforcement == "ACTIVE"
+          matches_default_branch(rulesets[ruleset].conditions.refName.include)
 
-          rulesets[rule].type == "pull_request"
-          params := object.get(rulesets[rule], "parameters", {})
+          some rule
+          rulesets[ruleset].rules.nodes[rule].type == "PULL_REQUEST"
+          params := object.get(rulesets[ruleset].rules.nodes[rule], "parameters", {})
           required_reviews := object.get(params, "required_approving_review_count", 0)
           required_reviews >= input.profile.required_approvals
         }
         force_push_blocked if {
+          some ruleset
+          rulesets[ruleset].target == "BRANCH"
+          rulesets[ruleset].enforcement == "ACTIVE"
+          matches_default_branch(rulesets[ruleset].conditions.refName.include)
+
           some rule
-          rulesets[rule].target == "BRANCH"
-          rulesets[rule].enforcement == "ACTIVE"
-          matches_default_branch(rulesets[rule].conditions.refName.include)
-          rulesets[rule].type == "non_fast_forward"
+          rulesets[ruleset].rules.nodes[rule].type == "NON_FAST_FORWARD"
         }
 
         delete_protected if {
-          some rule
-          rulesets[rule].target == "BRANCH"
-          rulesets[rule].enforcement == "ACTIVE"
-          matches_default_branch(rulesets[rule].conditions.refName.include)
+          some ruleset
+          rulesets[ruleset].target == "BRANCH"
+          rulesets[ruleset].enforcement == "ACTIVE"
+          matches_default_branch(rulesets[ruleset].conditions.refName.include)
 
-          rulesets[rule].type == "deletion"
+          rulesets[ruleset].rules.nodes[rule].type == "DELETION"
         }
 
         default output := {"id": ""}
         # Two rules cannot share the same name; if we find a rule with
         # the target name, we should do an update rather than create
         output := {"id": ruleId} if {
-          some rule
-          rulesets[rule].name == "Enforce Pull Requests"
-          ruleId := rulesets[rule].databaseId
+          some ruleset
+          rulesets[ruleset].name == "Enforce Pull Requests"
+          ruleId := rulesets[ruleset].databaseId
         }
 
         # We can match the default branch three ways:
