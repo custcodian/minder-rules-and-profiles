@@ -35,18 +35,6 @@ rest:
             type: string
           repo:
             type: string
-    workflow_run:
-      endpoint: https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow}/runs
-      parse: json
-      input_schema:
-        type: object
-        properties:
-          owner:
-            type: string
-          repo:
-            type: string
-          workflow:
-            type: integer
     code_scanning:
       endpoint: https://api.github.com/repos/{owner}/{repo}/code-scanning/default-setup
       parse: json
