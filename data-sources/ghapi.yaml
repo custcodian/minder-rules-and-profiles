@@ -3,6 +3,7 @@ type: data-source
 name: ghapi
 context: {}
 rest:
+  providerAuth: true
   def:
     license:
       endpoint: https://api.github.com/repos/{owner}/{repo}/license
@@ -26,6 +27,16 @@ rest:
             type: string
     private_vuln_reporting:
       endpoint: https://api.github.com/repos/{owner}/{repo}/private-vulnerability-reporting
+      parse: json
+      input_schema:
+        type: object
+        properties:
+          owner:
+            type: string
+          repo:
+            type: string
+    code_scanning:
+      endpoint: https://api.github.com/repos/{owner}/{repo}/code-scanning/default-setup
       parse: json
       input_schema:
         type: object

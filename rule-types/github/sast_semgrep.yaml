@@ -10,7 +10,7 @@ context:
   provider: github
 description: |
   Verifies that static application security testing (SAST) is configured for
-  the repository using Semgrep.
+  the repository using Semgrep or CodeQL.
 
   Semgrep is a static analysis tool that can be used to find security
   vulnerabilities in code. It is a fast and lightweight open-source tool that
@@ -35,6 +35,8 @@ def:
     type: rego
     rego:
       type: deny-by-default
+      data_sources:
+        - name: ghapi
       def: |
         package minder
 
@@ -51,10 +53,12 @@ def:
 
           semgrep_job(contents.jobs[_])
         }
-        # TODO: check /repos/${owner}/${repo}/code-scanning/default-setup for
-        # {"state": "enabled"} and skip if true
-        # This depends on the data source API being able to make _authenticated_
-        # requests to the GitHub API.
+
+        codeql_status := minder.datasource.ghapi.code_scanning({
+          "owner": entity.owner,
+          "repo": entity.name,
+        })
+        allow if codeql_status.state == "configured"
 
         run_on_pr(on) if on.pull_request
         run_on_pr(on) if "pull_request" in on
@@ -65,6 +69,8 @@ def:
         semgrep_job(job) if {
           contains(job.steps[_].run, "semgrep ")
         }
+
+        message := "Could not find Semgrep Action or GitHub code scanning configuration"
   remediate:
     type: pull_request
     pull_request:
