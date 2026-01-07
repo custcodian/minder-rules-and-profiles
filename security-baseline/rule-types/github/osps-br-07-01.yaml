@@ -31,7 +31,7 @@ def:
     # be encrypted.
     type: rego
     data_sources:
-      - name: baseline_ghapi
+      - name: baselineghapi
     rego:
       type: deny-by-default
       def: |
@@ -49,7 +49,7 @@ def:
           "" != content
         }
 
-        repo_settings := minder.datasource.baseline_ghapi.repo_config({
+        repo_settings := minder.datasource.baselineghapi.repo_config({
             "owner": input.properties["github/repo_owner"],
             "repo": input.properties["github/repo_name"]
           }).body

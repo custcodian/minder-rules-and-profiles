@@ -1,6 +1,6 @@
 version: v1
 type: data-source
-name: baseline_ghapi
+name: baselineghapi
 context: {}
 rest:
   providerAuth: true
