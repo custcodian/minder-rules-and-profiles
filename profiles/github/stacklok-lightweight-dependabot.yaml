@@ -1,5 +1,6 @@
 ---
 # Stacklok profile
+# This profile was authored by Stacklok for their own repository management rules
 version: v1
 type: profile
 name: stacklok-lightweight-dependabot
