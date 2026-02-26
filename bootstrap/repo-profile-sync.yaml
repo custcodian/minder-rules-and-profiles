@@ -1,0 +1,82 @@
+version: v1
+type: rule-type
+name: repo-profile-sync
+display_name: Synchronize profiles from config repository
+description: |
+  Periodically synchronize profiles and rules from the Custcodian configuration repository.
+guidance: |
+  This rule is used to bootstrap configuration-as-code with the Custcodian ruleset.
+
+  By default, the sync workflow will copy the `top-5` and `security-baseline` policies from
+  the `custcodian/minder-rules-and-profiles` repository, keeping them up to date while
+  maintaining local customizations.  You can modify the `policy_dirs` parameter in the
+  sync-catalog step to include additional or different profiles as needed.
+
+  The workflow can be modified freely, but if it is deleted, Minder will create a new
+  PR to restore it.
+context:
+  provider: github
+def:
+  in_entity: repository
+  rule_schema: {}
+  ingest:
+    type: git
+  eval:
+    type: rego
+    rego:
+      type: deny-by-default
+      def: |
+        package minder
+        import rego.v1
+
+        default allow := false
+
+        allow if {
+          # If the workflow already exists, we don't need to try to fix it.
+          file.exists(".github/workflows/custcodian-sync.yaml")
+        }
+
+  remediate:
+    type: pull_request
+    pull_request:
+      title: Sync Minder Configuration from Custcodian
+      body: |
+        This PR was automatically created by the Custcodian bootstrap profile
+        synchronization rule.  This workflow is used to maintain configuration-as-code
+        following the managed Custcodian rulesets.
+
+        By default, the workflow will copy the `top-5` and `security-baseline` policies from
+        the `custcodian/minder-rules-and-profiles` repository, keeping them up to date while
+        maintaining local customizations.  You can modify the `policy_dirs` parameter in the
+        sync-catalog step to include additional or different profiles as needed.
+
+        The workflow can be modified freely, but if it is deleted, Minder will create a new
+        PR to restore it.
+      contents:
+      - path: ".github/workflows/custcodian-sync.yaml"
+        action: "replace"
+        content: |
+          name: Sync Minder Policies and Profiles
+          on:
+            push:
+              branches:
+              - main
+              paths:
+              - .github/workflows/policy-sync.yaml
+            workflow_dispatch:
+              # Allow manual runs
+            schedule:
+              - cron: "0 8 * * 1" # Run every Monday at 8 AM UTC
+
+          jobs:
+            sync-policies:
+              runs-on: ubuntu-latest
+              permissions:
+                contents: write  # Needs write access to a branch to create PRs.
+                pull-requests: write
+              steps:
+                - name: Sync catalog from custcodian/minder-rules-and-profiles
+                  uses: custcodian/sync-catalog@v1
+                  with:
+                    policy_dirs: top-5,security-baseline,bootstrap
+

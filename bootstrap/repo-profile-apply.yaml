@@ -1,0 +1,89 @@
+version: v1
+type: rule-type
+name: repo-profile-apply
+display_name: Apply profiles from config repository
+description: |
+  Apply profiles and rules on commit (and periodically) based on the checked-in
+  configuration.
+guidance: |
+  This rule is used to bootstrap configuration-as-code with the Custcodian ruleset.
+
+  This rule configures GitHub Actions to apply profiles and rules based on the checked-in
+  Minder configuration. If the checked-in configuration is modified, the new
+  configuration will be applied automatically. It will also be applied weekly, to
+  ensure that the checked in and applied configuration remains consistent over time.
+context:
+  provider: github
+def:
+  in_entity: repository
+  rule_schema: {}
+  ingest:
+    type: git
+  eval:
+    type: rego
+    rego:
+      type: deny-by-default
+      def: |
+        package minder
+        import rego.v1
+
+        default allow := false
+
+        allow if {
+          # If the workflow already exists, we don't need to try to fix it.
+          file.exists(".github/workflows/custcodian-apply.yaml")
+        }
+
+  remediate:
+    type: pull_request
+    pull_request:
+      title: Apply Minder Configuration from Repository
+      # TODO: add more descriptive detail
+      body: |
+        This PR was automatically created by the Custcodian bootstrap profile
+        synchronization rule. This rule applies checked-in rulesets using the
+        configuration-as-code principle, in conjunction with the synchronized
+        Custcodian ruleset from the custcodian-sync workflow.
+
+        This rule configures GitHub Actions to apply profiles and rules based onthe checked-in
+        Minder configuration. If the checked-in configuration is modified, the new
+        configuration will be applied automatically. It will also be applied weekly, to
+        ensure that the checked in and applied configuration remains consistent over time.
+      contents:
+      - path: ".github/workflows/custcodian-apply.yaml"
+        action: "replace"
+        content: |
+          name: Apply Minder Profiles on Update
+          on:
+            push:
+              branches:
+              - main
+              paths:
+              - minder/**
+            # Allow to run manually if needed.
+            workflow_dispatch:
+
+          permissions:
+            # id-token: write is needed to fetch a GitHub Actions token for other services
+            id-token: write
+            # contents: read is needed to checkout the current repo
+            contents: read
+
+          jobs:
+            minder-config:
+              runs-on: ubuntu-latest
+              steps:
+              # TODO: enable pinning.
+              - name: Checkout repo
+                uses: actions/checkout@v4
+              - name: Apply Minder Config
+                uses: mindersec/minder-action@v1
+                with:
+                  ## TODO: fill this in, particularly if you have more than one project
+                  ## that the GitHub Action has permissions for.
+                  # project: ${project}
+
+                  ## Apply all the policies in the minder directory, which should be synced
+                  ## from other sources by the `custcodian-sync.yaml` workflow.
+                  directory: ./minder
+

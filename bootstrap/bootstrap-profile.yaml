@@ -1,0 +1,15 @@
+version: v1
+type: profile
+name: bootstrap
+display_name: Custcodian Bootstrap Profile
+selection:
+- entity: repository
+  # TODO: fix minder bug trimming the end of this string
+  selector: 'repository.name.endsWith("/.github") '
+repository:
+- name: Import Custcodian Profiles
+  type: repo-profile-sync
+- name: Apply Custcodian Profiles
+  type: repo-profile-apply
+remediate: on
+alert: off
