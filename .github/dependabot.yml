@@ -1,12 +1,49 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+- package-ecosystem: "pip"
+  directories:
+  - /rule-types/common/python_lock_file_exists.testdata/no_lock/
+  
+  - /rule-types/common/python_lock_file_exists.testdata/pdm_lock/
+  
+  - /rule-types/common/python_lock_file_exists.testdata/pinned_requirements_txt/
+  
+  - /rule-types/common/python_lock_file_exists.testdata/poetry_lock/
+  
+  - /rule-types/common/python_lock_file_exists.testdata/some_unpinned_requirements_txt/
+  schedule:
+    interval: "weekly"  # .schedule_interval
+  open-pull-requests-limit: 10
+
+- package-ecosystem: "npm"
+  directories:
+  - /rule-types/github/sca_dependabot.testdata/all_ecosystems/
+  
+  - /rule-types/github/sca_dependabot.testdata/no_dependabot_yml/
+  
+  - /rule-types/github/sca_dependabot.testdata/some_ecosystems/frontend/
+  
+  - /security-baseline/rule-types/github/osps-qa-02-01.testdata/package_json_no_lock/
+  
+  - /security-baseline/rule-types/github/osps-qa-02-01.testdata/package_json_with_package_lock/
+  
+  - /security-baseline/rule-types/github/osps-qa-02-01.testdata/package_json_with_yarn_lock/
+  schedule:
+    interval: "weekly"  # .schedule_interval
+  open-pull-requests-limit: 10
+
+- package-ecosystem: "maven"
+  directories:
+  - /rule-types/github/sca_dependabot.testdata/some_ecosystems/
+  schedule:
+    interval: "weekly"  # .schedule_interval
+  open-pull-requests-limit: 10
+
+- package-ecosystem: "bundler"
+  directories:
+  - /security-baseline/rule-types/github/osps-qa-02-01.testdata/gemfile_no_lock/
+  
+  - /security-baseline/rule-types/github/osps-qa-02-01.testdata/gemfile_with_lock/
+  schedule:
+    interval: "weekly"  # .schedule_interval
+  open-pull-requests-limit: 10
