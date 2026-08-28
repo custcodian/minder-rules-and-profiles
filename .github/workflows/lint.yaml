@@ -15,15 +15,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
 
-      - name: Set up Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
-        with:
-          check-latest: true
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4.1.2
+      - name: Install Minder CLI
+        uses: mindersec/minder-client-installer@68946e2f8f5099d1118d588f6fd952f08ec132f9 # v1.1.3
 
       - name: Lint Rule Types
-        run: go run github.com/mindersec/minder/cmd/dev@latest ruletype lint -r rule-types/github --skip-rego
+        run: mindev ruletype lint -r rule-types/github --skip-rego
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v5
+        with:
+          go-version: '1.26'
+          check-latest: true
+
+      - name: Install OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+
+      - name: Check embedded Rego formatting
+        run: python3 scripts/migrate-rego-v1.py --check .
+
+      - name: Install PyYAML
+        run: python3 -m pip install PyYAML==6.0.3
+
+      - name: Extract Rego policies
+        run: >-
+          python3 scripts/extract-rego.py
+          --output "${RUNNER_TEMP}/rego"
+          rule-types
+          security-baseline/rule-types
+          autofill-insights/rule-types
+
+      # YAML block indentation uses spaces. Restore OPA's canonical tab
+      # indentation before asking Regal to enforce opa-fmt.
+      - name: Normalize extracted policies
+        run: find "${RUNNER_TEMP}/rego" -name '*.rego' -exec opa fmt --write {} +
+
+      - name: Enforce Rego v1
+        run: >-
+          go run github.com/open-policy-agent/regal@v0.41.1 lint
+          --disable-all
+          --enable use-rego-v1
+          --enable opa-fmt
+          --config-file .regal/config.yaml
+          "${RUNNER_TEMP}/rego"
 
       - name: Ensure rule type release_phase is set
         run: |

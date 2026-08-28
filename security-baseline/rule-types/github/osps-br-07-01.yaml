@@ -50,9 +50,10 @@ def:
         }
 
         repo_settings := minder.datasource.baselineghapi.repo_config({
-            "owner": input.properties["github/repo_owner"],
-            "repo": input.properties["github/repo_name"]
-          }).body
+          "owner": input.properties["github/repo_owner"],
+          "repo": input.properties["github/repo_name"],
+        }).body
+
         allow if {
           repo_settings.security_and_analysis.secret_scanning_push_protection.status == "enabled"
         }

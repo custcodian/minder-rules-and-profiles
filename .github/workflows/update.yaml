@@ -12,23 +12,24 @@ jobs:
     name: Check ruletype validate-update
     steps:
     - name: Checkout current
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
       with:
         # See https://stackoverflow.com/a/74268200 -- the PR branch has a single
         # commit merging the two branches, so we need the last 2 commits.
         fetch-depth: 2
 
     - name: Checkout comparison branch (main) in subdirectory
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
       with:
         # Checkout the main branch into a subdirectory
         ref: main
         path: before_files
 
-    - name: Set up Go
-      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
-      with:
-        check-latest: true
+    - name: Install cosign
+      uses: sigstore/cosign-installer@v4.1.2
+
+    - name: Install Minder CLI
+      uses: mindersec/minder-client-installer@68946e2f8f5099d1118d588f6fd952f08ec132f9 # v1.1.3
 
     - name: Determine Changed Files
       id: changes
@@ -59,8 +60,6 @@ jobs:
         # Fail the script if any command fails
         set -e
 
-        go install github.com/mindersec/minder/cmd/dev@latest
-        
         # Loop through the changed files and run the go command for each
         echo "$CHANGED_FILES" | while read FILE; do
           echo "Processing file: $FILE"
@@ -74,10 +73,10 @@ jobs:
           BEFORE_FILE="before_files/$FILE"
           AFTER_FILE="$FILE"
 
-          if [ -f "$BEFORE_FILE" ] && [ grep "type: rule-type" "$BEFORE_FILE" ]; then
+          if [ -f "$BEFORE_FILE" ] && grep -q "type: rule-type" "$BEFORE_FILE"; then
             echo "Running ruletype validate-update command for $BEFORE_FILE and $AFTER_FILE..."
             # Run the go command with the before and after files
-            dev ruletype validate-update --before "$BEFORE_FILE" --after "$AFTER_FILE"
+            mindev ruletype validate-update --before "$BEFORE_FILE" --after "$AFTER_FILE"
           else
             echo "Warning: $BEFORE_FILE does not exist, skipping."
           fi
