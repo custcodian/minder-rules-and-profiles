@@ -25,13 +25,22 @@ The entity itself, however, always originates from a provider.
 
 ## How to get started with writing rules and profiles?
 
-To get started with writing rules and profiles, you can check the following resources:
+### Quick Start Guides
+
+For comprehensive, repository-specific guides on writing rule types:
+- **[Writing Rule Types: Comprehensive Guide](./docs/writing-rule-types.md)** - In-depth guide with examples and best practices
+- **[Rule Type Quick Reference](./docs/rule-type-quick-reference.md)** - Concise syntax reference for quick lookup
+
+### Official Minder Documentation
+
 - [How to write a rule type](https://mindersec.github.io/how-to/custom-rules)
 - [How to write a rule type using Rego](https://mindersec.github.io/how-to/writing-rules-in-rego)
 - [How to use mindev to develop and debug rule types](https://mindersec.github.io/how-to/mindev)
 - [How to write rules and profiles - YouTube](https://www.youtube.com/watch?v=eXp0nyd72d4)
 - [Minder documentation](https://mindersec.github.io)
 - [Rego language tutorial](https://www.openpolicyagent.org/docs/latest/policy-language/)
+
+### Reference Examples
 
 Apart from that, you can also check the reference rules and profiles in this repository to get an idea of how to write, structure, and organize them.
 
@@ -44,6 +53,22 @@ Apart from that, you can also check the reference rules and profiles in this rep
 - Data sources: the reference data sources are available in the `data-sources` directory. To take a data source
   into use, you'll need to instantiate it in a Minder instance. For example, to instantiate the
   reference data source for using OSV as a data source, use the following command - `minder datasource create -f data-sources osv.yaml`.
+
+### Migrating Rego rule definitions to v1
+
+Rule type YAML files can embed Rego policies under `def.eval.rego.def`. To migrate those policies from Rego v0 syntax
+to Rego v1 syntax across this repository, install OPA v1 or newer and run:
+
+```sh
+task migrate-rego-v1
+```
+
+The task runs `opa fmt --v0-v1` against each embedded Rego `def: |` block and writes the formatted source back into the
+YAML file. You can also run the script directly against a specific path:
+
+```sh
+python3 scripts/migrate-rego-v1.py rule-types/github/secret_scanning.yaml
+```
 
 ## How to contribute?
 

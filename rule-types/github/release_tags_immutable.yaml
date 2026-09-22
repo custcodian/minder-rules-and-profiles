@@ -59,13 +59,16 @@ def:
       type: deny-by-default
       def: |
         package minder
+
         import rego.v1
 
         default allow := false
+
         rulesets := input.ingested.data.repository.rulesets.nodes
 
         # Don't allow updating tags after creation
         default update_blocked := false
+
         update_blocked if {
           some rule
           rulesets[rule].target == "TAG"
@@ -76,6 +79,7 @@ def:
 
         # We also need to block deletion, to avoid delete + create to evade update block
         default delete_blocked := false
+
         delete_blocked if {
           some rule
           rulesets[rule].target == "TAG"
@@ -90,6 +94,7 @@ def:
         }
 
         default output := {"id": ""}
+
         # Two rules cannot share the same name; if we find a rule with
         # the target name, we should do an update rather than create
         output := {"id": ruleId} if {

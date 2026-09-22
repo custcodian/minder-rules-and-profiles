@@ -6,7 +6,7 @@ tests:
       type: repository
       entity:
         owner: "mindersec"
-        name: "minder"    
+        name: "minder"
     expect: "pass"
     http:
       status: 200
@@ -18,7 +18,7 @@ tests:
       type: repository
       entity:
         owner: "mindersec"
-        name: "minder"    
+        name: "minder"
     expect: "fail"
     http:
       status: 200
@@ -30,7 +30,7 @@ tests:
       type: repository
       entity:
         owner: "mindersec"
-        name: "minder"    
+        name: "minder"
     expect: "fail"
     http:
       status: 404
@@ -42,7 +42,7 @@ tests:
       type: repository
       entity:
         owner: "mindersec"
-        name: "minder"    
+        name: "minder"
     expect: "fail"
     http:
       status: 502

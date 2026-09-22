@@ -18,6 +18,7 @@ guidance: |
   For more information, see [GitHub's
   documentation](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule).
 def:
+  provider_traits: ["rest", "github"]
   in_entity: repository
   rule_schema: {}
   ingest:
@@ -37,9 +38,11 @@ def:
       type: deny-by-default
       def: |
         package minder
+
         import rego.v1
 
         default allow := false
+
         msg := "Branch deletions are allowed on the default branch"
 
         allow if {
@@ -50,13 +53,13 @@ def:
         applied_rulesets := minder.datasource.baselineghapi.branch_protection_status({
           "owner": input.properties["github/repo_owner"],
           "repo": input.properties["github/repo_name"],
-          "branch": input.properties["github/default_branch"]
+          "branch": input.properties["github/default_branch"],
         })
+
         allow if {
           some rule
           applied_rulesets[rule].type = "deletion"
         }
-
 remediate:
   type: rest
   rest:

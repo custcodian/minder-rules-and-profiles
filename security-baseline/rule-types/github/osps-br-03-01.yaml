@@ -19,6 +19,7 @@ guidance: |
 
   GitHub does this by default.
 def:
+  provider_traits: ["rest", "github"]
   in_entity: repository
   rule_schema: {}
   ingest:
@@ -36,6 +37,7 @@ def:
       type: deny-by-default
       def: |
         package minder
+
         import rego.v1
 
         default allow := false

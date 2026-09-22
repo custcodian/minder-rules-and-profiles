@@ -15,6 +15,7 @@ guidance: |
   Released source code or release assets must be accompanied by a `LICENSE`
   or `COPYING` file, or a `LICENSE/` folder alongside the assets.
 def:
+  provider_traits: ["rest", "github"]
   in_entity: release
   rule_schema: {}
   ingest:
@@ -34,7 +35,7 @@ def:
 
         import rego.v1
 
-        default allow = false
+        default allow := false
 
         # GitHub publishes the source code at `tarball_url`, which includes
         # the LICENSE in the repo, so we only need to check for an explicit

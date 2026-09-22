@@ -61,12 +61,17 @@ def:
       type: deny-by-default
       def: |
         package minder
+
         import rego.v1
 
         default allow := false
+
         default prs_required := false
+
         default force_push_blocked := false
+
         default delete_protected := false
+
         rulesets := input.ingested.data.repository.rulesets.nodes
 
         allow if {
@@ -77,7 +82,8 @@ def:
 
         message := sprintf(
           "Default branch protections missing:\n- Delete protected: %t\n- Force push protected: %t\n- PR required: %t",
-          [delete_protected, force_push_blocked, prs_required])
+          [delete_protected, force_push_blocked, prs_required],
+        )
 
         prs_required if {
           some ruleset
@@ -91,6 +97,7 @@ def:
           required_reviews := object.get(params, "required_approving_review_count", 0)
           required_reviews >= input.profile.required_approvals
         }
+
         force_push_blocked if {
           some ruleset
           rulesets[ruleset].target == "BRANCH"
@@ -111,6 +118,7 @@ def:
         }
 
         default output := {"id": ""}
+
         # Two rules cannot share the same name; if we find a rule with
         # the target name, we should do an update rather than create
         output := {"id": ruleId} if {
@@ -123,13 +131,14 @@ def:
         matches_default_branch(refs) if {
           refs[_] == "~DEFAULT_BRANCH"
         }
+
         matches_default_branch(refs) if {
           refs[_] == concat("refs/heads/", input.properties["github/default_branch"])
         }
+
         matches_default_branch(refs) if {
           refs[_] == "~ALL"
         }
- 
   remediate:
     type: rest
     rest:

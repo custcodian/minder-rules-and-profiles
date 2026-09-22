@@ -57,6 +57,7 @@ def:
         import rego.v1
 
         default allow := false
+
         default message := "Dependabot is not configured"
 
         # If renovate is already configured, we don't need to apply dependabot
@@ -87,6 +88,7 @@ def:
 
         # Read the dependabot configuration, if present
         default config := {"updates": {}}
+
         config := fileConfig if {
           file.exists("./.github/dependabot.yml")
           fileConfig := yaml.unmarshal(file.read("./.github/dependabot.yml"))
@@ -97,16 +99,17 @@ def:
 
         files_in_repo := file.walk(".")
 
-        violations contains { "msg": json.marshal({"ecosystem": ecosystem, "dirs": dirs })} if {
+        violations contains {"msg": json.marshal({"ecosystem": ecosystem, "dirs": dirs})} if {
           some ecosystem, globs in ecosystems
 
-          paths := {dir | 
+          paths := {dir |
             # Add a leading "." to allow for simpler glob matching
             # We also convert \ to / to allow test to run on Windows"
             path := replace(concat("/", [".", files_in_repo[_]]), "\\", "/")
             match := globs[_]
             matched := glob.match(concat("/", ["**", match]), ["/"], path)
             matched
+
             # Remove leading "." added at the start to help with glob matching
 
             dir := trim(regex.replace(path, "/[^/]+$", "/"), ".")

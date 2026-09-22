@@ -45,6 +45,7 @@ def:
         default allow := false
 
         workflows := file.ls("./.github/workflows")
+
         allow if {
           some w
           contents := parse_yaml(file.read(workflows[w]))
@@ -58,6 +59,7 @@ def:
           "owner": entity.owner,
           "repo": entity.name,
         })
+
         allow if codeql_status.state == "configured"
 
         run_on_pr(on) if on.pull_request
@@ -66,6 +68,7 @@ def:
         semgrep_job(job) if {
           job.container.image == "semgrep/semgrep"
         }
+
         semgrep_job(job) if {
           contains(job.steps[_].run, "semgrep ")
         }

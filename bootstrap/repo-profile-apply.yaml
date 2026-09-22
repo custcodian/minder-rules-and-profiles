@@ -25,6 +25,7 @@ def:
       type: deny-by-default
       def: |
         package minder
+
         import rego.v1
 
         default allow := false
@@ -33,7 +34,6 @@ def:
           # If the workflow already exists, we don't need to try to fix it.
           file.exists(".github/workflows/custcodian-apply.yaml")
         }
-
   remediate:
     type: pull_request
     pull_request:

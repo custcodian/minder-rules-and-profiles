@@ -8,7 +8,6 @@ alert: "off"
 remediate: "off"
 repository:
   # OSPS-AC-01.01: Require MFA for collaborators; depends on org entity
-  
   # OSPS-AC-02.01: Hosted GitHub has this by default
   - name: osps-ac-02-01
     type: osps-ac-02-01

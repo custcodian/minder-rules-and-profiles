@@ -16,6 +16,7 @@ guidance: |
   recognized and legally enforceable open source software license,
   providing clarity on how the code can be used and shared by others.
 def:
+  provider_traits: ["rest", "github"]
   in_entity: repository
   rule_schema: {}
   ingest:
@@ -36,22 +37,21 @@ def:
       def: |
         package minder
 
-        import future.keywords.every
-        import future.keywords.if
+        import rego.v1
 
-        violations[{"msg": msg}] {
+        violations contains {"msg": msg} if {
           not input.ingested.license
           msg := "License details not found"
         }
 
-        violations[{"msg": msg}] {
+        violations contains {"msg": msg} if {
           input.ingested.license
           license := input.ingested.license.spdx_id
 
           resp2 := minder.datasource.spdx.licenses({})
           licenses := resp2.body.licenses
-          osi := { l.licenseId | l := licenses[_]; l.isOsiApproved }
-          fsf := { l.licenseId | l := licenses[_]; l.isFsfLibre }
+          osi := {l.licenseId | l := licenses[_]; l.isOsiApproved}
+          fsf := {l.licenseId | l := licenses[_]; l.isFsfLibre}
           approved_licenses := osi | fsf
 
           count(approved_licenses) != 0
